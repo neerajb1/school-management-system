@@ -1,0 +1,30 @@
+
+# Project Rules for School Management System
+
+## 1. Data Source
+- Always use `fetch()` to retrieve data from local JSON files located in `/public/api/`.
+- Never suggest or use external APIs or backend services.
+
+## 2. No Backend
+- Do not suggest `axios`, `apiService`, or any calls to `localhost:5001`.
+- This is a frontend-only demo and does not rely on a backend.
+
+## 3. Component Integrity
+- When refactoring, **NEVER delete** the following components:
+  - `FilterBar`
+  - `NoticeBoard`
+  - `Sidebar`
+  - Layout wrappers (e.g., `div` or `section` elements that structure the UI).
+
+## 4. Single File Logic
+- Use `students.json` for both student lists and student details.
+- Always use `.find(s => s.id === Number(id))` to retrieve specific student details.
+
+## 5. UI Style
+- Strictly use **Tailwind CSS** for styling.
+- Use **Lucide-React** icons for all icons.
+- Maintain the 'Slate' professional theme for consistent UI design.
+- Tables: Always use the .admin-table-container wrapper and .admin-table class. Do not use raw HTML table borders.
+
+## 6. Rule Compliance
+- These rules must be checked and followed before generating any code.
