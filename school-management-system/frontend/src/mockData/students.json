@@ -1,0 +1,12 @@
+[
+    { "id": 1, "name": "John Doe", "grade": "A", "attendance_percentage": 95 },
+    { "id": 2, "name": "Jane Smith", "grade": "B", "attendance_percentage": 88 },
+    { "id": 3, "name": "Alice Johnson", "grade": "A", "attendance_percentage": 92 },
+    { "id": 4, "name": "Bob Brown", "grade": "C", "attendance_percentage": 75 },
+    { "id": 5, "name": "Charlie Davis", "grade": "B", "attendance_percentage": 85 },
+    { "id": 6, "name": "Diana Evans", "grade": "A", "attendance_percentage": 98 },
+    { "id": 7, "name": "Ethan Foster", "grade": "B", "attendance_percentage": 89 },
+    { "id": 8, "name": "Fiona Green", "grade": "C", "attendance_percentage": 78 },
+    { "id": 9, "name": "George Hill", "grade": "A", "attendance_percentage": 94 },
+    { "id": 10, "name": "Hannah White", "grade": "B", "attendance_percentage": 87 }
+]

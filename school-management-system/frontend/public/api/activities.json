@@ -1,0 +1,23 @@
+[
+    {
+      "id": "ACT-001",
+      "type": "REGISTRATION",
+      "message": "Student Meera Iyer successfully registered for Grade 10-C.",
+      "time": "10 minutes ago",
+      "admin": "Sarah Jenkins"
+    },
+    {
+      "id": "ACT-002",
+      "type": "FEES",
+      "message": "Fee payment of $1,200 received for SCH-2025-1004.",
+      "time": "1 hour ago",
+      "admin": "System"
+    },
+    {
+      "id": "ACT-003",
+      "type": "LEAVE",
+      "message": "Leave request approved for Sarah Williams (Medical).",
+      "time": "3 hours ago",
+      "admin": "Principal"
+    }
+  ]

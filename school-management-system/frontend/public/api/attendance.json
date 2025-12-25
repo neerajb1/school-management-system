@@ -1,0 +1,54 @@
+[
+    {
+      "date": "2025-12-20",
+      "grade": "Grade 10",
+      "section": "A",
+      "stats": { "present": 2, "absent": 1, "late": 0 },
+      "records": [
+        { "studentId": "SCH-2025-1001", "name": "Arjun Sharma", "status": "Present", "remarks": "" },
+        { "studentId": "SCH-2025-1002", "name": "Sarah Williams", "status": "Absent", "remarks": "Medical Leave" },
+        { "studentId": "SCH-2025-1007", "name": "Rahul Mehra", "status": "Present", "remarks": "" }
+      ]
+    },
+    {
+      "date": "2025-12-20",
+      "grade": "Grade 10",
+      "section": "B",
+      "stats": { "present": 1, "absent": 0, "late": 0 },
+      "records": [
+        { "studentId": "SCH-2025-1003", "name": "Ishan Verma", "status": "Present", "remarks": "" }
+      ]
+    },
+    {
+      "date": "2025-12-20",
+      "grade": "Grade 11",
+      "section": "A",
+      "stats": { "present": 1, "absent": 1, "late": 0 },
+      "records": [
+        { "studentId": "SCH-2025-1004", "name": "Priya Das", "status": "Present", "remarks": "" },
+        { "studentId": "SCH-2025-1008", "name": "Ayesha Siddiqui", "status": "Absent", "remarks": "Personal" }
+      ]
+    },
+    {
+      "date": "2025-12-19",
+      "grade": "Grade 10",
+      "section": "A",
+      "stats": { "present": 3, "absent": 0, "late": 0 },
+      "records": [
+        { "studentId": "SCH-2025-1001", "name": "Arjun Sharma", "status": "Present", "remarks": "" },
+        { "studentId": "SCH-2025-1002", "name": "Sarah Williams", "status": "Present", "remarks": "" },
+        { "studentId": "SCH-2025-1007", "name": "Rahul Mehra", "status": "Present", "remarks": "" }
+      ]
+    },
+    {
+      "date": "2025-12-18",
+      "grade": "Grade 10",
+      "section": "A",
+      "stats": { "present": 2, "absent": 0, "late": 1 },
+      "records": [
+        { "studentId": "SCH-2025-1001", "name": "Arjun Sharma", "status": "Late", "remarks": "Bus delayed" },
+        { "studentId": "SCH-2025-1002", "name": "Sarah Williams", "status": "Present", "remarks": "" },
+        { "studentId": "SCH-2025-1007", "name": "Rahul Mehra", "status": "Present", "remarks": "" }
+      ]
+    }
+  ]

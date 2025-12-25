@@ -1,0 +1,18 @@
+[
+    {
+      "id": 1,
+      "type": "Exam",
+      "title": "Final Math Exam Scheduled",
+      "content": "Grade 10-A Math exam will be held in Hall A on Dec 28th.",
+      "date": "2025-12-21",
+      "priority": "High"
+    },
+    {
+      "id": 2,
+      "type": "Holiday",
+      "title": "Winter Break Announcement",
+      "content": "School will remain closed from Dec 24th to Jan 2nd.",
+      "date": "2025-12-20",
+      "priority": "Medium"
+    }
+  ]

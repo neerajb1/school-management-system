@@ -1,32 +1,15 @@
-# Node.js dependencies
-node_modules/
+# Node & Frontend
+**/node_modules/
+frontend/dist/
+frontend/build/
+
+# Python & Backend
+**/__pycache__/
 venv/
-
-# Build output
-build/
-dist/
-
-# Environment variables
+*.pyc
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
 
-# Coverage reports
-coverage/
-
-# Logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# OS-specific files
+# System & IDE
 .DS_Store
-Thumbs.db
-
-# IDE-specific files
 .vscode/
 .idea/
-*.iml

@@ -1,0 +1,24 @@
+[
+    {
+      "id": 1,
+      "empId": "TCH-2025-001",
+      "name": "Dr. Rajesh Khanna",
+      "subject": "Mathematics",
+      "assignedGrade": "Grade 10",
+      "assignedSection": "A",
+      "email": "rajesh.k@school.com",
+      "contact": "9876543230",
+      "status": "On Duty"
+    },
+    {
+      "id": 2,
+      "empId": "TCH-2025-002",
+      "name": "Ms. Sarah Jenkins",
+      "subject": "Science",
+      "assignedGrade": "Grade 10",
+      "assignedSection": "B",
+      "email": "sarah.j@school.com",
+      "contact": "9876543231",
+      "status": "On Duty"
+    }
+  ]

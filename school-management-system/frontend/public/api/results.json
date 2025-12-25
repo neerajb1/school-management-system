@@ -1,0 +1,42 @@
+[
+    {
+      "studentId": 1,
+      "grade": "Grade 10",
+      "section": "A",
+      "subject": "Math",
+      "marks": 85,
+      "date": "2025-12-21"
+    },
+    {
+      "studentId": 2,
+      "grade": "Grade 10",
+      "section": "A",
+      "subject": "Math",
+      "marks": 92,
+      "date": "2025-12-21"
+    },
+    {
+      "studentId": 3,
+      "grade": "Grade 10",
+      "section": "A",
+      "subject": "Math",
+      "marks": 78,
+      "date": "2025-12-21"
+    },
+    {
+      "studentId": 4,
+      "grade": "Grade 10",
+      "section": "A",
+      "subject": "Math",
+      "marks": 45,
+      "date": "2025-12-21"
+    },
+    {
+      "studentId": 5,
+      "grade": "Grade 10",
+      "section": "A",
+      "subject": "Math",
+      "marks": 30,
+      "date": "2025-12-21"
+    }
+  ]

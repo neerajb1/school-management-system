@@ -1,0 +1,38 @@
+{
+  "summary": {
+    "totalStudents": 1250,
+    "activeStudents": 1180,
+    "totalTeachers": 85,
+    "avgAttendance": 94.2,
+    "pendingFees": 12,
+    "newAdmissions": 4
+  },
+  "attendanceTrends": [
+    { "label": "Mon", "percentage": 92 },
+    { "label": "Tue", "percentage": 95 },
+    { "label": "Wed", "percentage": 88 },
+    { "label": "Thu", "percentage": 94 },
+    { "label": "Fri", "percentage": 91 }
+  ],
+  "monthlyStats": [
+    { "month": "January", "value": 90 },
+    { "month": "February", "value": 92 },
+    { "month": "March", "value": 95 },
+    { "month": "April", "value": 93 },
+    { "month": "May", "value": 94 },
+    { "month": "June", "value": 96 }
+  ],
+  "gradeWiseDistribution": [
+    { "grade": "Grade 9", "count": 310 },
+    { "grade": "Grade 10", "count": 305 },
+    { "grade": "Grade 11", "count": 315 },
+    { "grade": "Grade 12", "count": 320 }
+  ],
+  "recentActivities": [
+    { "id": 1, "type": "enrolled", "user": "John Doe", "message": "John Doe enrolled", "time": "2 mins ago", "color": "green" },
+    { "id": 2, "type": "meeting", "user": "Staff", "message": "Staff meeting at 3 PM", "time": "10 mins ago", "color": "blue" },
+    { "id": 3, "type": "course", "user": "Admin", "message": "New course added: Physics", "time": "1 hour ago", "color": "yellow" },
+    { "id": 4, "type": "library", "user": "Librarian", "message": "Library books updated", "time": "2 hours ago", "color": "yellow" },
+    { "id": 5, "type": "conference", "user": "Principal", "message": "Parent-teacher conference scheduled", "time": "5 hours ago", "color": "blue" }
+  ]
+}

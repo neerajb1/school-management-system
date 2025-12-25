@@ -1,0 +1,22 @@
+[
+    {
+      "id": 1,
+      "grade": "Grade 10",
+      "section": "A",
+      "subject": "Mathematics",
+      "date": "2025-12-28",
+      "time": "10:00 AM",
+      "duration": "3 Hours",
+      "room": "Hall A"
+    },
+    {
+      "id": 2,
+      "grade": "Grade 10",
+      "section": "B",
+      "subject": "Science",
+      "date": "2025-12-29",
+      "time": "02:00 PM",
+      "duration": "3 Hours",
+      "room": "Lab 1"
+    }
+  ]

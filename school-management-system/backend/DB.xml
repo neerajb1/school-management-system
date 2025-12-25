@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dbmodel pgmodeler-version="1.0.4">
+  <database name="school_erp" encoding="UTF8"/>
+
+  <!-- ===================== -->
+  <!-- STAFF -->
+  <!-- ===================== -->
+  <table name="staff">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="emp_id" type="varchar(30)" not-null="true" unique="true"/>
+    <column name="first_name" type="varchar(50)"/>
+    <column name="last_name" type="varchar(50)"/>
+    <column name="role" type="varchar(30)"/>
+    <column name="email" type="varchar(100)"/>
+    <column name="phone" type="varchar(20)"/>
+    <column name="is_active" type="boolean" default-value="true"/>
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+  </table>
+
+  <!-- ===================== -->
+  <!-- STUDENT -->
+  <!-- ===================== -->
+  <table name="student">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="admission_no" type="varchar(30)" not-null="true" unique="true"/>
+    <column name="first_name" type="varchar(50)" not-null="true"/>
+    <column name="last_name" type="varchar(50)"/>
+    <column name="dob" type="date"/>
+    <column name="gender" type="varchar(10)"/>
+    <column name="blood_group" type="varchar(5)"/>
+    <column name="email" type="varchar(100)"/>
+    <column name="phone" type="varchar(20)"/>
+    <column name="admission_date" type="date"/>
+    <column name="emergency_contact_name" type="varchar(100)"/>
+    <column name="emergency_contact_phone" type="varchar(20)"/>
+    <column name="medical_notes" type="text"/>
+    <column name="is_active" type="boolean" default-value="true"/>
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+  </table>
+
+  <!-- ===================== -->
+  <!-- ACADEMIC SESSION -->
+  <!-- ===================== -->
+  <table name="academic_session">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="year_label" type="varchar(20)" not-null="true" unique="true"/>
+    <column name="is_current" type="boolean"/>
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+  </table>
+
+  <!-- ===================== -->
+  <!-- CLASS -->
+  <!-- ===================== -->
+  <table name="class">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="grade" type="varchar(20)" not-null="true"/>
+    <column name="section" type="varchar(5)" not-null="true"/>
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+  </table>
+
+  <!-- ===================== -->
+  <!-- SUBJECT -->
+  <!-- ===================== -->
+  <table name="subject">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="name" type="varchar(50)"/>
+    <column name="code" type="varchar(20)" unique="true"/>
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+  </table>
+
+  <!-- ===================== -->
+  <!-- CLASS SUBJECT -->
+  <!-- ===================== -->
+  <table name="class_subject">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="class_id" type="bigint"/>
+    <column name="subject_id" type="bigint"/>
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+  </table>
+
+  <!-- ===================== -->
+  <!-- TEACHER ASSIGNMENT -->
+  <!-- ===================== -->
+  <table name="teacher_assignment">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="staff_id" type="bigint"/>
+    <column name="class_subject_id" type="bigint"/>
+    <column name="session_id" type="bigint"/>
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+  </table>
+
+  <!-- ===================== -->
+  <!-- ENROLLMENT -->
+  <!-- ===================== -->
+  <table name="enrollment">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="student_id" type="bigint"/>
+    <column name="session_id" type="bigint"/>
+    <column name="class_id" type="bigint"/>
+    <column name="roll_no" type="integer"/>
+    <column name="status" type="varchar(20)"/>
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+  </table>
+
+  <!-- ===================== -->
+  <!-- ATTENDANCE -->
+  <!-- ===================== -->
+  <table name="attendance">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="enrollment_id" type="bigint"/>
+    <column name="attendance_date" type="date"/>
+    <column name="status" type="varchar(10)"/>
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+  </table>
+
+  <!-- ===================== -->
+  <!-- EXAM -->
+  <!-- ===================== -->
+  <table name="exam">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="session_id" type="bigint"/>
+    <column name="name" type="varchar(50)"/>
+    <column name="term" type="varchar(20)"/>
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+  </table>
+
+  <!-- ===================== -->
+  <!-- MARKSHEET -->
+  <!-- ===================== -->
+  <table name="marksheet">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="enrollment_id" type="bigint"/>
+    <column name="subject_id" type="bigint"/>
+    <column name="exam_id" type="bigint"/>
+    <column name="marks_obtained" type="numeric(5,2)"/>
+    <column name="total_marks" type="numeric(5,2)"/>
+    <column name="is_locked" type="boolean"/>
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+  </table>
+
+  <!-- ===================== -->
+  <!-- FEES -->
+  <!-- ===================== -->
+  <table name="fee_type">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="name" type="varchar(50)"/>
+    <column name="frequency" type="varchar(20)"/>
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+  </table>
+
+  <table name="fee_master">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="fee_type_id" type="bigint"/>
+    <column name="class_id" type="bigint"/>
+    <column name="session_id" type="bigint"/>
+    <column name="amount" type="numeric(10,2)"/>
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+  </table>
+
+  <table name="student_ledger">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="enrollment_id" type="bigint"/>
+    <column name="fee_master_id" type="bigint"/>
+    <column name="discount_amount" type="numeric(10,2)"/>
+    <column name="final_amount" type="numeric(10,2)"/>
+    <column name="status" type="varchar(20)"/>
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+  </table>
+
+  <table name="transaction">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="ledger_id" type="bigint"/>
+    <column name="amount_paid" type="numeric(10,2)"/>
+    <column name="payment_date" type="date"/>
+    <column name="payment_method" type="varchar(20)"/>
+    <column name="receipt_no" type="varchar(50)"/>
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+  </table>
+
+</dbmodel>

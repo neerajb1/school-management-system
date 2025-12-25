@@ -1,0 +1,14 @@
+[
+    {
+        "records": [
+            { "studentId": "12345", "date": "2023-10-01", "status": "Present" },
+            { "studentId": "12345", "date": "2023-10-02", "status": "Absent" }
+        ]
+    },
+    {
+        "records": [
+            { "studentId": "12346", "date": "2023-10-01", "status": "Present" },
+            { "studentId": "12346", "date": "2023-10-02", "status": "Present" }
+        ]
+    }
+]

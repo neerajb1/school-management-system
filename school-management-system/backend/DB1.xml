@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dbmodel pgmodeler-version="1.1.3" last-position="0,0" last-zoom="1">
+
+  <!-- ================= ENUM TYPES ================= -->
+
+  <type name="gender_enum" category="enum">
+    <enumeration label="MALE"/>
+    <enumeration label="FEMALE"/>
+    <enumeration label="OTHER"/>
+  </type>
+
+  <type name="attendance_status_enum" category="enum">
+    <enumeration label="PRESENT"/>
+    <enumeration label="ABSENT"/>
+  </type>
+
+  <type name="attendance_type_enum" category="enum">
+    <enumeration label="FULL_DAY"/>
+    <enumeration label="HALF_DAY"/>
+    <enumeration label="LATE"/>
+    <enumeration label="LEAVE"/>
+  </type>
+
+  <type name="fee_frequency_enum" category="enum">
+    <enumeration label="MONTHLY"/>
+    <enumeration label="QUARTERLY"/>
+    <enumeration label="YEARLY"/>
+    <enumeration label="ONETIME"/>
+  </type>
+
+  <type name="payment_method_enum" category="enum">
+    <enumeration label="CASH"/>
+    <enumeration label="CARD"/>
+    <enumeration label="UPI"/>
+    <enumeration label="BANK_TRANSFER"/>
+  </type>
+
+  <!-- ================= ROLE & ACCESS ================= -->
+
+  <table name="role">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="name" type="varchar(50)" unique="true"/>
+    <column name="is_deleted" type="boolean" default-value="false"/>
+
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+  </table>
+
+  <!-- ================= DEPARTMENT ================= -->
+
+  <table name="department">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="name" type="varchar(50)" unique="true"/>
+    <column name="is_deleted" type="boolean" default-value="false"/>
+
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+    <column name="is_deleted" type="boolean" default-value="false"/>
+  </table>
+
+  <!-- ================= STAFF ================= -->
+
+  <table name="staff">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="emp_id" type="varchar(30)" unique="true"/>
+    <column name="first_name" type="varchar(50)"/>
+    <column name="last_name" type="varchar(50)"/>
+    <column name="email" type="varchar(100)"/>
+    <column name="phone" type="varchar(20)"/>
+    <column name="photo_url" type="varchar(255)"/>
+
+    <column name="role_id" type="bigint"/>
+    <column name="department_id" type="bigint"/>
+
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+    <column name="is_deleted" type="boolean" default-value="false"/>
+  </table>
+
+  <!-- ================= STUDENT ================= -->
+
+  <table name="student">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="admission_no" type="varchar(30)" unique="true"/>
+    <column name="first_name" type="varchar(50)"/>
+    <column name="last_name" type="varchar(50)"/>
+    <column name="dob" type="date"/>
+    <column name="gender" type="gender_enum"/>
+    <column name="nationality" type="varchar(50)"/>
+    <column name="email" type="varchar(100)"/>
+    <column name="phone" type="varchar(20)"/>
+    <column name="photo_url" type="varchar(255)"/>
+    <column name="admission_date" type="date"/>
+
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+    <column name="is_deleted" type="boolean" default-value="false"/>
+  </table>
+
+  <!-- ================= ACADEMIC SESSION ================= -->
+
+  <table name="academic_session">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="year_label" type="varchar(20)" unique="true"/>
+    <column name="is_current" type="boolean"/>
+
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+    <column name="is_deleted" type="boolean" default-value="false"/>
+  </table>
+
+  <!-- ================= SUBJECT ================= -->
+
+  <table name="subject">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="name" type="varchar(50)"/>
+    <column name="code" type="varchar(20)" unique="true"/>
+
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+    <column name="is_deleted" type="boolean" default-value="false"/>
+  </table>
+
+  <!-- ================= ATTENDANCE ================= -->
+
+  <table name="attendance">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="enrollment_id" type="bigint"/>
+    <column name="attendance_date" type="date"/>
+    <column name="status" type="attendance_status_enum"/>
+    <column name="attendance_type" type="attendance_type_enum"/>
+    <column name="attendance_remarks" type="text"/>
+
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+    <column name="is_deleted" type="boolean" default-value="false"/>
+  </table>
+
+  <!-- ================= FEE ================= -->
+
+  <table name="fee_type">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="name" type="varchar(50)"/>
+    <column name="frequency" type="fee_frequency_enum"/>
+
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+    <column name="is_deleted" type="boolean" default-value="false"/>
+  </table>
+
+  <table name="transaction">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="ledger_id" type="bigint"/>
+    <column name="amount_paid" type="numeric(10,2)"/>
+    <column name="payment_method" type="payment_method_enum"/>
+
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+    <column name="is_deleted" type="boolean" default-value="false"/>
+  </table>
+
+  <!-- ================= EXAM ================= -->
+
+  <table name="exam">
+    <column name="id" type="bigserial" primary-key="true"/>
+    <column name="session_id" type="bigint"/>
+    <column name="name" type="varchar(50)"/>
+    <column name="term" type="varchar(20)"/>
+    <column name="exam_type" type="varchar(20)"/>
+    <column name="description" type="text"/>
+
+    <column name="created_at" type="timestamp"/>
+    <column name="created_by" type="bigint"/>
+    <column name="modified_at" type="timestamp"/>
+    <column name="modified_by" type="bigint"/>
+    <column name="is_deleted" type="boolean" default-value="false"/>
+  </table>
+
+</dbmodel>
