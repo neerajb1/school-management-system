@@ -74,7 +74,6 @@ class FeeInstallment(BaseModel, TimestampMixin):
     fee_master = db.relationship("FeeMaster", backref="installments")
 
     
-
 class Transaction(BaseModel, TimestampMixin):
     __tablename__ = "transaction"
     # Now link transaction directly to an installment
