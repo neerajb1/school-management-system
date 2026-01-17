@@ -46,13 +46,32 @@ class Enrollment(BaseModel, TimestampMixin):
 
 class Attendance(BaseModel, TimestampMixin):
     __tablename__ = "attendance"
-    enrollment_id = db.Column(db.BigInteger, db.ForeignKey("enrollment.id"), nullable=False)
-    attendance_date = db.Column(db.Date, nullable=False)
-    status = db.Column(db.Enum(AttendanceStatusEnum), nullable=False)
-    attendance_type = db.Column(db.Enum(AttendanceTypeEnum))
-    attendance_remarks = db.Column(db.Text)
 
-    enrollment = db.relationship("Enrollment", back_populates="attendance_records")
+    id = db.Column(db.String, primary_key=True)
+
+    enrollment_id = db.Column(
+        db.ForeignKey("enrollment.id"),
+        nullable=False,
+        index=True
+    )
+
+    date = db.Column(db.Date, nullable=False)
+
+    status = db.Column(
+        db.Enum("PRESENT", "ABSENT", "LATE", name="attendance_status_enum"),
+        nullable=False
+    )
+
+    enrollment = db.relationship("Enrollment", backref="attendances")
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "enrollment_id",
+            "date",
+            name="uq_attendance_enrollment_date"
+        ),
+    )
+
 
 class Exam(BaseModel, TimestampMixin):
     __tablename__ = "exam"
@@ -69,16 +88,41 @@ class Exam(BaseModel, TimestampMixin):
 
 class Marksheet(BaseModel, TimestampMixin):
     __tablename__ = "marksheet"
-    enrollment_id = db.Column(db.BigInteger, db.ForeignKey("enrollment.id"), nullable=False)
-    subject_id = db.Column(db.BigInteger, db.ForeignKey("subject.id"), nullable=False)
-    exam_id = db.Column(db.BigInteger, db.ForeignKey("exam.id"), nullable=False)
-    marks_obtained = db.Column(db.Numeric(5, 2))
-    total_marks = db.Column(db.Numeric(5, 2))
-    is_locked = db.Column(db.Boolean, default=False)
 
-    enrollment = db.relationship("Enrollment", back_populates="marksheets")
-    subject = db.relationship("Subject", back_populates="marksheets")
-    exam = db.relationship("Exam", back_populates="marksheets")
+    id = db.Column(db.String, primary_key=True)
+
+    exam_id = db.Column(
+        db.ForeignKey("exam.id"),
+        nullable=False,
+        index=True
+    )
+
+    subject_id = db.Column(
+        db.ForeignKey("subject.id"),
+        nullable=False,
+        index=True
+    )
+
+    student_id = db.Column(
+        db.ForeignKey("student.id"),
+        nullable=False,
+        index=True
+    )
+
+    marks = db.Column(db.Float, nullable=False)
+
+    exam = db.relationship("Exam", backref="marksheets")
+    subject = db.relationship("Subject")
+    student = db.relationship("Student")
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "exam_id",
+            "subject_id",
+            "student_id",
+            name="uq_marksheet_exam_subject_student"
+        ),
+    )
 
 class TeacherAssignment(BaseModel, TimestampMixin):
     __tablename__ = "teacher_assignment"
@@ -91,3 +135,12 @@ class TeacherAssignment(BaseModel, TimestampMixin):
     subject = db.relationship("Subject", back_populates="teacher_assignments")
     session = db.relationship("AcademicSession", back_populates="teacher_assignments")
     class_room = db.relationship("ClassRoom", back_populates="teacher_assignments")
+
+
+class GradeScale(BaseModel, TimestampMixin):
+    __tablename__ = "grade_scale"
+    grade_name = db.Column(db.String(10), nullable=False) # e.g., "A+"
+    min_percentage = db.Column(db.Numeric(5, 2), nullable=False) # 90.00
+    max_percentage = db.Column(db.Numeric(5, 2), nullable=False) # 100.00
+    grade_point = db.Column(db.Numeric(3, 1)) # 4.0 or 10.0
+    remarks = db.Column(db.String(100))

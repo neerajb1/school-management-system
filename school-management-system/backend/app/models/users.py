@@ -4,7 +4,8 @@ class Role(BaseModel, TimestampMixin):
     __tablename__ = "role"
     name = db.Column(db.String(50), unique=True, nullable=False)
 
-    staff = db.relationship("Staff", back_populates="role")
+    #staff = db.relationship("Staff", back_populates="role")
+    users = db.relationship("UserAccount", back_populates="role")
 
 class Department(BaseModel, TimestampMixin):
     __tablename__ = "department"
@@ -20,7 +21,8 @@ class Staff(BaseModel, TimestampMixin):
     email = db.Column(db.String(100))
     phone = db.Column(db.String(20))
     photo_url = db.Column(db.String(255))
-
+    joining_date = db.Column(db.Date)
+    qualification = db.Column(db.String(100))
     role_id = db.Column(db.BigInteger, db.ForeignKey("role.id"))
     department_id = db.Column(db.BigInteger, db.ForeignKey("department.id"))
 
@@ -96,3 +98,36 @@ class MedicalRecord(BaseModel, TimestampMixin, MedicalMixin):
 
     student = db.relationship("Student", back_populates="medical")
     staff = db.relationship("Staff", back_populates="medical")
+
+class School(BaseModel, TimestampMixin):
+    __tablename__ = "school"
+    name = db.Column(db.String(100), nullable=False)
+    address = db.Column(db.Text)
+    contact_number = db.Column(db.String(20))
+    registration_no = db.Column(db.String(50)) # Government ID
+    logo_url = db.Column(db.String(255))
+
+
+class UserAccount(BaseModel, TimestampMixin):
+    __tablename__ = "user_account"
+    email = db.Column(db.String(100), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    role_id = db.Column(db.BigInteger, db.ForeignKey("role.id"))
+    
+    # Polymorphic linking
+    user_type = db.Column(db.String(20)) # (ADMIN / TEACHER / STUDENT / PARENT, ACCOUNTANT)
+    is_active = db.Column(db.Boolean, default=True)
+    last_login = db.Column(db.DateTime)
+    role_id = db.Column(db.ForeignKey("role.id"), nullable=False)
+    role = db.relationship("Role", back_populates="users")
+    #role = db.relationship("Role", back_populates="accounts")
+
+class Announcement(BaseModel, TimestampMixin):
+    __tablename__ = "announcement"
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    target_audience = db.Column(db.String(20)) # 'ALL', 'TEACHERS', 'PARENTS'
+    expiry_date = db.Column(db.Date)
+    
+    # Link to a specific session if needed
+    session_id = db.Column(db.BigInteger, db.ForeignKey("academic_session.id"))
