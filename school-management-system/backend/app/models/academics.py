@@ -55,6 +55,19 @@ class Attendance(BaseModel, TimestampMixin):
         index=True
     )
 
+    # 🔥 denormalized for fast queries
+    class_id = db.Column(
+        db.ForeignKey("class_room.id"),
+        nullable=False,
+        index=True
+    )
+
+    section_id = db.Column(
+        db.ForeignKey("section.id"),
+        nullable=False,
+        index=True
+    )
+
     date = db.Column(db.Date, nullable=False)
 
     status = db.Column(
@@ -62,7 +75,9 @@ class Attendance(BaseModel, TimestampMixin):
         nullable=False
     )
 
-    enrollment = db.relationship("Enrollment", backref="attendances")
+    enrollment = db.relationship("Enrollment")
+    class_room = db.relationship("ClassRoom")
+    section = db.relationship("Section")
 
     __table_args__ = (
         db.UniqueConstraint(
@@ -71,6 +86,7 @@ class Attendance(BaseModel, TimestampMixin):
             name="uq_attendance_enrollment_date"
         ),
     )
+
 
 
 class Exam(BaseModel, TimestampMixin):
@@ -91,6 +107,12 @@ class Marksheet(BaseModel, TimestampMixin):
 
     id = db.Column(db.String, primary_key=True)
 
+    enrollment_id = db.Column(
+        db.ForeignKey("enrollment.id"),
+        nullable=False,
+        index=True
+    )
+
     exam_id = db.Column(
         db.ForeignKey("exam.id"),
         nullable=False,
@@ -103,26 +125,21 @@ class Marksheet(BaseModel, TimestampMixin):
         index=True
     )
 
-    student_id = db.Column(
-        db.ForeignKey("student.id"),
-        nullable=False,
-        index=True
-    )
-
     marks = db.Column(db.Float, nullable=False)
 
-    exam = db.relationship("Exam", backref="marksheets")
+    enrollment = db.relationship("Enrollment")
+    exam = db.relationship("Exam")
     subject = db.relationship("Subject")
-    student = db.relationship("Student")
 
     __table_args__ = (
         db.UniqueConstraint(
+            "enrollment_id",
             "exam_id",
             "subject_id",
-            "student_id",
-            name="uq_marksheet_exam_subject_student"
+            name="uq_marksheet_enrollment_exam_subject"
         ),
     )
+
 
 class TeacherAssignment(BaseModel, TimestampMixin):
     __tablename__ = "teacher_assignment"

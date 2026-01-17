@@ -8,14 +8,31 @@ class FeeType(BaseModel, TimestampMixin):
 
 class FeeMaster(BaseModel, TimestampMixin):
     __tablename__ = "fee_master"
-    fee_type_id = db.Column(db.BigInteger, db.ForeignKey("fee_type.id"), nullable=False)
-    class_id = db.Column(db.BigInteger, db.ForeignKey("class.id"), nullable=False)
-    session_id = db.Column(db.BigInteger, db.ForeignKey("academic_session.id"), nullable=False)
-    amount = db.Column(db.Numeric(10, 2), nullable=False)
 
-    fee_type = db.relationship("FeeType", back_populates="fee_masters")
-    session = db.relationship("AcademicSession", back_populates="fee_masters")
-    ledgers = db.relationship("StudentLedger", back_populates="fee_master")
+    id = db.Column(db.String, primary_key=True)
+
+    class_id = db.Column(
+        db.ForeignKey("class_room.id"),
+        nullable=False,
+        index=True
+    )
+
+    session_id = db.Column(
+        db.ForeignKey("academic_session.id"),
+        nullable=False,
+        index=True
+    )
+
+    fee_type_id = db.Column(
+        db.ForeignKey("fee_type.id"),
+        nullable=False,
+        index=True
+    )
+
+    class_room = db.relationship("ClassRoom")
+    session = db.relationship("AcademicSession")
+    fee_type = db.relationship("FeeType")
+
 
 class DiscountOffer(BaseModel, TimestampMixin):
     """
