@@ -11,6 +11,18 @@ def login_required(fn):
         return fn(*args, **kwargs)
     return wrapper
 
+def require_active_account(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        if g.current_account_status != "ACTIVE":
+            return jsonify({
+                "error": {
+                    "code": "account_not_active",
+                    "message": "Account onboarding not completed"
+                }
+            }), 403
+        return fn(*args, **kwargs)
+    return wrapper
 
 
 

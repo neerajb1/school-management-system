@@ -13,6 +13,10 @@ from app.core.auth_utils import (
     is_refresh_token_valid,
 )
 from app.models.refresh_token import RefreshToken
+from sqlalchemy.exc import IntegrityError
+from app.core.auth_utils import create_user_account
+
+
 
 auth_bp = Blueprint("auth", __name__)
 import inspect
@@ -235,3 +239,58 @@ def logout_all_sessions():
     db.session.commit()
 
     return "", 204
+
+@auth_bp.route("/register", methods=["POST"])
+def register():
+    data = request.get_json(silent=True) or {}
+
+    required_fields = ["email", "password", "full_name", "user_type"]
+    missing = [f for f in required_fields if not data.get(f)]
+
+    if missing:
+        return jsonify({
+            "error": "Missing required fields",
+            "fields": missing
+        }), 400
+
+    try:
+        user = create_user_account(
+            email=data["email"],
+            password=data["password"],
+            full_name=data["full_name"],
+            phone=data.get("phone"),
+            user_type=data["user_type"].upper(),
+        )
+
+        db.session.commit()
+
+    except ValueError as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 400
+
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "Email already registered"}), 409
+
+    access_token = generate_token(user.id)
+    refresh_token = generate_refresh_token(user.id)
+
+    return jsonify({
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "full_name": user.full_name,
+            "user_type": user.user_type,
+            "account_status": user.account_status,
+        },
+        "tokens": {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "Bearer",
+        }
+    }), 201
+
+
+
+
+

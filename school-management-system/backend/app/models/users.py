@@ -47,7 +47,7 @@ class Department(BaseModel, AuditMixin,TimestampMixin):
     staff = relationship("Staff", back_populates="department")
 
 
-class Staff(BaseModel, AuditMixin,TimestampMixin):
+class Staff(BaseModel, AuditMixin, TimestampMixin):
     __tablename__ = "staff"
 
     emp_id = Column(String(30), unique=True, nullable=False)
@@ -62,11 +62,27 @@ class Staff(BaseModel, AuditMixin,TimestampMixin):
     role_id = Column(BigInteger, ForeignKey("role.id"))
     department_id = Column(BigInteger, ForeignKey("department.id"))
 
+    # NEW mapping
+    user_account_id = Column(
+        BigInteger,
+        ForeignKey("user_account.id"),
+        unique=True,
+        nullable=True,
+    )
+
     role = relationship("Role", back_populates="staff")
     department = relationship("Department", back_populates="staff")
+
+    user_account = relationship(
+        "UserAccount",
+        foreign_keys=[user_account_id],
+        lazy="joined",
+    )
+
     transport = relationship("Transport", back_populates="staff", uselist=False)
     medical = relationship("MedicalRecord", back_populates="staff", uselist=False)
     teacher_assignments = relationship("TeacherAssignment", back_populates="staff")
+    
 
 
 class Guardian(BaseModel, AuditMixin,TimestampMixin):
@@ -164,13 +180,19 @@ class UserAccount(BaseModel, TimestampMixin, AuditMixin):
     user_type = Column(String(20))  # ADMIN / TEACHER / STUDENT / PARENT
     is_active = Column(Boolean, default=True)
     last_login = Column(DateTime)
+    full_name = Column(String(255), nullable=False)
+    phone = Column(String(20))
+    account_status = Column(
+        String(32),
+        nullable=False,
+        default="PENDING_ONBOARDING",
+    )
 
     role = relationship(
         "Role",
         back_populates="users",
         foreign_keys=[role_id]
     )
-
 
 
 class Announcement(BaseModel, AuditMixin,TimestampMixin):

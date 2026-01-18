@@ -3,6 +3,8 @@ from .config import Config
 from app.extensions import db, migrate   # ✅ SINGLE SOURCE OF TRUTH
 from app.middleware.auth_context import load_user_context
 from app.core.audit_events import register_audit_events
+from app.core.error_handlers import register_error_handlers
+from app.api.v1.blueprint import api_v1_bp
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -27,6 +29,8 @@ def create_app(config_class=Config):
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix="/auth")
+    app.register_blueprint(api_v1_bp)
+    register_error_handlers(app)
 
     # 6️⃣ Load user context before every request
     @app.before_request

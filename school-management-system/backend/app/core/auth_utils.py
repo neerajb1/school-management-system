@@ -3,7 +3,8 @@ from app.models.users import UserAccount
 from app.extensions import db
 from datetime import datetime
 from app.models.refresh_token import RefreshToken
-
+from app.models.users import UserAccount, Role
+from werkzeug.security import generate_password_hash
 
 
 def get_current_user():
@@ -48,3 +49,38 @@ def is_refresh_token_valid(jti):
     if token.expires_at < datetime.utcnow():
         return False
     return True
+
+
+def create_user_account(
+    *,
+    email: str,
+    password: str,
+    full_name: str,
+    phone: str,
+    user_type: str,
+):
+    role = (
+        db.session.query(Role)
+        .filter(Role.name == user_type)
+        .one_or_none()
+    )
+
+    if not role:
+        raise ValueError(f"Invalid user_type: {user_type}")
+
+    user = UserAccount(
+        email=email.lower().strip(),
+        password_hash=generate_password_hash(password,method="pbkdf2:sha256",
+    salt_length=16,),
+        full_name=full_name.strip(),
+        phone=phone,
+        user_type=user_type,
+        role_id=role.id,
+        account_status="PENDING_ONBOARDING",
+        is_active=True,
+    )
+
+    db.session.add(user)
+    db.session.flush()  # get user.id safely
+
+    return user

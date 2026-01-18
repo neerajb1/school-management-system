@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import jsonify
+from flask import jsonify, g
 from app.core.auth_utils import get_current_user
 from .auth_decorators import login_required
 from app.middleware.role_utils import get_current_user_role_name
