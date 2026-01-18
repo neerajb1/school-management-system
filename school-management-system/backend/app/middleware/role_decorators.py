@@ -15,12 +15,12 @@ def require_roles(*allowed_roles):
     def decorator(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
-            user = get_current_user()
-
-            if not user:
+            # Authentication check
+            if not g.current_user_id:
                 return jsonify({"error": "Authentication required"}), 401
 
-            if not user.role or user.role.name not in allowed_roles:
+            # Authorization check
+            if not g.current_user_role or g.current_user_role not in allowed_roles:
                 return jsonify({"error": "Forbidden"}), 403
 
             return fn(*args, **kwargs)

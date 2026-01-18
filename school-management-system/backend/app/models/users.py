@@ -87,7 +87,12 @@ class Staff(BaseModel, AuditMixin, TimestampMixin):
 
 class Guardian(BaseModel, AuditMixin,TimestampMixin):
     __tablename__ = "guardian"
-
+    user_account_id = Column(
+        BigInteger,
+        ForeignKey("user_account.id"),
+        unique=True,
+        nullable=True,
+    )
     father_name = Column(String(100))
     father_occupation = Column(String(100))
     mother_name = Column(String(100))
@@ -110,7 +115,12 @@ class Student(BaseModel, AuditMixin,TimestampMixin):
     phone = Column(String(20))
     photo_url = Column(String(255))
     admission_date = Column(Date)
-
+    user_account_id = Column(
+        BigInteger,
+        ForeignKey("user_account.id"),
+        unique=True,
+        nullable=True,  # important for migration safety
+    )
     guardian_id = Column(BigInteger, ForeignKey("guardian.id"))
 
     guardian = relationship("Guardian", back_populates="students")
