@@ -91,8 +91,7 @@ def decode_token(token: str) -> dict:
 # ─────────────────────────────────────────────
 # Helpers
 # ─────────────────────────────────────────────
-def get_user_id_from_token(token: str) -> int:
-    payload = decode_token(token)
+def get_user_id_from_token(payload: dict) -> int:
     return int(payload["sub"])
 
 

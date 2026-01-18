@@ -1,14 +1,22 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify,g
 from werkzeug.security import check_password_hash
 import jwt
 from datetime import datetime
 from app.extensions import db
 from app.models.users import UserAccount
 from app.models.auth import RevokedToken
-from app.core.jwt_utils import generate_token, decode_token
+from app.core.jwt_utils import generate_token, decode_token, get_user_id_from_token,generate_refresh_token
 from app.middleware.auth_decorators import login_required
+from app.core.auth_utils import (
+    store_refresh_token,
+    revoke_refresh_token,
+    is_refresh_token_valid,
+)
+from app.models.refresh_token import RefreshToken
 
 auth_bp = Blueprint("auth", __name__)
+import inspect
+from flask import current_app
 
 
 @auth_bp.route("/login", methods=["POST"])
@@ -27,16 +35,24 @@ def login():
         .first()
     )
 
-    if not user:
+    if not user or not user.is_active:
         return jsonify({"error": "Invalid credentials"}), 401
 
     if not check_password_hash(user.password_hash, password):
         return jsonify({"error": "Invalid credentials"}), 401
 
     token = generate_token(user.id)
+    refresh_token = generate_refresh_token(user.id)
+    refresh_payload = decode_token(refresh_token)
+    store_refresh_token(
+        jti=refresh_payload["jti"],
+        user_id=user.id,
+        expires_at=datetime.utcfromtimestamp(refresh_payload["exp"]),
+    )
 
     return jsonify({
         "access_token": token,
+        "refresh_token": refresh_token,
         "token_type": "Bearer",
         "expires_in": 86400
     }), 200
@@ -46,21 +62,34 @@ def login():
 @login_required
 def logout():
     auth_header = request.headers.get("Authorization")
+    if not auth_header.startswith("Bearer "):
+        return "", 204
     token = auth_header.split(" ", 1)[1]
 
-    payload = decode_token(token)
+    try:
+        payload = decode_token(token)
+    except Exception:
+        return "", 204
+    
+    jti = payload.get("jti")
+    user_id = get_user_id_from_token(payload)
+    if jti:
 
-    revoked = RevokedToken(
-        jti=payload["jti"],
-        reason="logout",
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
-    )
+        revoked = RevokedToken(
+            jti=payload["jti"],
+            reason="logout",
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
 
-    db.session.add(revoked)
-    db.session.commit()
+        db.session.add(revoked)
+        db.session.commit()
 
-    return jsonify({"message": "Logged out successfully"}), 200
+        revoke_refresh_token(jti, user_id)
+        return jsonify({"message": "Logged out successfully"}), 200
+    return "", 204
+
+    
 
 
 @auth_bp.route("/verify", methods=["GET"])
@@ -74,10 +103,17 @@ def verify_token():
 
     try:
         payload = decode_token(token)
-    except Exception:
-        return jsonify({"error": "Invalid token"}), 401
+    except jwt.ExpiredSignatureError as e:
+        return jsonify({"error": "Token expired", "detail": str(e)}), 401
+    except jwt.InvalidTokenError as e:
+        return jsonify({"error": "Invalid token", "detail": str(e)}), 401
+    except Exception as e:
+        return jsonify({"error": "Unexpected error", "detail": str(e)}), 500
 
-    user_id = int(payload["sub"])   # ✅ THIS WAS THE BUG
+    if payload.get("type") != "access":
+        return jsonify({"error": "Invalid token type"}), 401
+
+    user_id = get_user_id_from_token(payload)
 
     user = (
         db.session.query(UserAccount)
@@ -110,32 +146,92 @@ def refresh():
 
     if not refresh_token:
         return jsonify({"error": "refresh_token required"}), 400
+    
+    if refresh_token.startswith("Bearer "):
+        refresh_token = refresh_token[len("Bearer "):]
 
-    payload = decode_token(refresh_token)
+    try:
+        payload = decode_token(refresh_token)
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
 
-    if payload["type"] != "refresh":
+
+    if payload.get("type") != "refresh":
         return jsonify({"error": "Invalid token type"}), 401
 
-    # Revoke old refresh token
-    revoked = RevokedToken(
-        jti=payload["jti"],
-        reason="refresh_rotation",
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
-    )
-    db.session.add(revoked)
+    user_id = get_user_id_from_token(payload)
+    jti = payload["jti"]
 
-    user_id = int(payload["sub"])
+    if not is_refresh_token_valid(jti):
+        return jsonify({"error": "Refresh token revoked"}), 403
 
-    from app.core.jwt_utils import generate_access_token, generate_refresh_token
+    # Rotate token
+    revoke_refresh_token(jti, user_id)
 
-    new_access = generate_access_token(user_id)
+    new_access = generate_token(user_id)
     new_refresh = generate_refresh_token(user_id)
+
+    new_payload = decode_token(new_refresh)
+
+    store_refresh_token(
+        jti=new_payload["jti"],
+        user_id=user_id,
+        expires_at=datetime.utcfromtimestamp(new_payload["exp"]),
+    )
+
+    return jsonify(
+        {
+            "access_token": new_access,
+            "refresh_token": new_refresh,
+        }
+    ), 200
+
+
+@auth_bp.route("/logout-all", methods=["POST"])
+@login_required
+def logout_all_sessions():
+    """
+    Logout user from ALL sessions (all devices).
+    """
+
+    user_id = g.current_user_id
+
+    # 1️⃣ Revoke ALL refresh tokens for this user
+    (
+        db.session.query(RefreshToken)
+        .filter(
+            RefreshToken.user_id == user_id,
+            RefreshToken.is_revoked.is_(False),
+        )
+        .update(
+            {
+                RefreshToken.is_revoked: True,
+                RefreshToken.updated_by_id: user_id,
+            },
+            synchronize_session=False,
+        )
+    )
+
+    # 2️⃣ Revoke current access token immediately
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header.split(" ", 1)[1]
+        try:
+            payload = decode_token(token)
+            jti = payload.get("jti")
+            if jti:
+                db.session.add(
+                    RevokedToken(
+                        jti=jti,
+                        created_by_id=user_id,
+                    )
+                )
+        except Exception:
+            # Token already invalid → nothing to do
+            pass
 
     db.session.commit()
 
-    return jsonify({
-        "access_token": new_access,
-        "refresh_token": new_refresh,
-        "token_type": "Bearer",
-    }), 200
+    return "", 204
