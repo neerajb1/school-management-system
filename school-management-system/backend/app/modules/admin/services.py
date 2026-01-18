@@ -1,3 +1,4 @@
+import logging
 from app.extensions import db
 from app.core.id_generators import generate_staff_emp_id, generate_student_admission_no
 from flask import current_app
@@ -10,6 +11,7 @@ from app.models.users import (
     Guardian
 )
 
+logger = logging.getLogger(__name__)
 
 # ─────────────────────────────────────────────
 # Helpers
@@ -37,45 +39,47 @@ def _get_user_or_fail(user_id: int, expected_type: str) -> UserAccount:
 # ─────────────────────────────────────────────
 
 def admin_onboard_staff(*, admin_user_id: int, data: dict):
-    user = (
-    db.session.query(UserAccount)
-    .filter_by(id=data["user_id"])
-    .first()
-)
-    current_app.logger.error(
-    "ONBOARD DEBUG user_id=%s status=%s is_active=%s",
-    user.id,
-    user.account_status,
-    user.is_active,
-)
-    if not user:
-        raise ValueError("User not found")
+    logger.info("Admin onboarding staff", extra={"admin_user_id": admin_user_id, "user_id": data["user_id"]})
+    try:
+        user = db.session.query(UserAccount).filter_by(id=data["user_id"]).first()
 
-    if user.account_status != "PENDING_ONBOARDING":
-        raise ValueError("User already onboarded")
+        if not user:
+            logger.warning("User not found during staff onboarding", extra={"user_id": data["user_id"]})
+            raise ValueError("User not found")
 
-    if user.user_type != "TEACHER":
-        raise ValueError("User type mismatch")
+        if user.account_status != "PENDING_ONBOARDING":
+            logger.warning("User already onboarded", extra={"user_id": user.id, "status": user.account_status})
+            raise ValueError("User already onboarded")
 
-    staff = Staff(
-        user_account_id=user.id,
-        first_name=data["first_name"],
-        last_name=data.get("last_name"),
-        joining_date=data.get("joining_date"),
-        qualification=data.get("qualification"),
-        department_id=data["department_id"],
-        role_id=data["role_id"],
-        photo_url=data.get("photo_url"),
-        emp_id=generate_staff_emp_id(),
-    )
+        if user.user_type != "TEACHER":
+            raise ValueError("User type mismatch")
 
-    user.account_status = "ACTIVE"
-    user.is_active = True
+        staff = Staff(
+            user_account_id=user.id,
+            first_name=data["first_name"],
+            last_name=data.get("last_name"),
+            joining_date=data.get("joining_date"),
+            qualification=data.get("qualification"),
+            department_id=data["department_id"],
+            role_id=data["role_id"],
+            photo_url=data.get("photo_url"),
+            emp_id=generate_staff_emp_id(),
+        )
 
-    db.session.add(staff)
-    db.session.commit()
+        user.account_status = "ACTIVE"
+        user.is_active = True
 
-    return staff
+        db.session.add(staff)
+        db.session.commit()
+
+        logger.info("Staff onboarded successfully", extra={"staff_id": staff.id, "admin_user_id": admin_user_id})
+        return staff
+    except ValueError as e:
+        logger.warning("Validation error during staff onboarding", extra={"error": str(e), "admin_user_id": admin_user_id})
+        raise
+    except Exception as e:
+        logger.exception("Unexpected error during staff onboarding", extra={"admin_user_id": admin_user_id})
+        raise
 
 
 # ─────────────────────────────────────────────

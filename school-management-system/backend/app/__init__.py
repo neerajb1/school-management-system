@@ -5,10 +5,16 @@ from app.middleware.auth_context import load_user_context
 from app.core.audit_events import register_audit_events
 from app.core.error_handlers import register_error_handlers
 from app.api.v1.blueprint import api_v1_bp
+from app.core.logging import configure_logging
+from app.middleware.logging_middleware import logging_middleware
 
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    configure_logging()
+
+    # Initialize logging middleware
+    logging_middleware(app)
 
     # 1️⃣ Init DB
     db.init_app(app)

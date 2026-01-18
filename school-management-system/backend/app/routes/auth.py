@@ -1,11 +1,11 @@
-from flask import Blueprint, request, jsonify,g
+from flask import Blueprint, request, jsonify, g
 from werkzeug.security import check_password_hash
 import jwt
 from datetime import datetime
 from app.extensions import db
 from app.models.users import UserAccount
 from app.models.auth import RevokedToken
-from app.core.jwt_utils import generate_token, decode_token, get_user_id_from_token,generate_refresh_token
+from app.core.jwt_utils import generate_token, decode_token, get_user_id_from_token, generate_refresh_token
 from app.middleware.auth_decorators import login_required
 from app.core.auth_utils import (
     store_refresh_token,
@@ -15,8 +15,9 @@ from app.core.auth_utils import (
 from app.models.refresh_token import RefreshToken
 from sqlalchemy.exc import IntegrityError
 from app.core.auth_utils import create_user_account
+import logging
 
-
+logger = logging.getLogger(__name__)
 
 auth_bp = Blueprint("auth", __name__)
 import inspect
@@ -30,7 +31,10 @@ def login():
     email = data.get("email")
     password = data.get("password")
 
+    logger.info("Login attempt", extra={"email": email})
+
     if not email or not password:
+        logger.warning("Login failed", extra={"email": email, "error": "email and password required"})
         return jsonify({"error": "email and password required"}), 400
 
     user = (
@@ -40,9 +44,11 @@ def login():
     )
 
     if not user or not user.is_active:
+        logger.warning("Login failed", extra={"email": email, "error": "Invalid credentials"})
         return jsonify({"error": "Invalid credentials"}), 401
 
     if not check_password_hash(user.password_hash, password):
+        logger.warning("Login failed", extra={"email": email, "error": "Invalid credentials"})
         return jsonify({"error": "Invalid credentials"}), 401
 
     token = generate_token(user.id)
@@ -53,6 +59,8 @@ def login():
         user_id=user.id,
         expires_at=datetime.utcfromtimestamp(refresh_payload["exp"]),
     )
+
+    logger.info("Login successful", extra={"user_id": user.id, "email": email})
 
     return jsonify({
         "access_token": token,
@@ -65,6 +73,8 @@ def login():
 @auth_bp.route("/logout", methods=["POST"])
 @login_required
 def logout():
+    logger.info("Logout attempt", extra={"user_id": g.current_user_id})
+
     auth_header = request.headers.get("Authorization")
     if not auth_header.startswith("Bearer "):
         return "", 204
@@ -74,7 +84,7 @@ def logout():
         payload = decode_token(token)
     except Exception:
         return "", 204
-    
+
     jti = payload.get("jti")
     user_id = get_user_id_from_token(payload)
     if jti:
@@ -90,10 +100,11 @@ def logout():
         db.session.commit()
 
         revoke_refresh_token(jti, user_id)
-        return jsonify({"message": "Logged out successfully"}), 200
-    return "", 204
 
-    
+        logger.info("Logout successful", extra={"user_id": g.current_user_id})
+        return jsonify({"message": "Logged out successfully"}), 200
+
+    return "", 204
 
 
 @auth_bp.route("/verify", methods=["GET"])
@@ -150,7 +161,7 @@ def refresh():
 
     if not refresh_token:
         return jsonify({"error": "refresh_token required"}), 400
-    
+
     if refresh_token.startswith("Bearer "):
         refresh_token = refresh_token[len("Bearer "):]
 
@@ -160,7 +171,6 @@ def refresh():
         return jsonify({"error": "Token expired"}), 401
     except jwt.InvalidTokenError:
         return jsonify({"error": "Invalid token"}), 401
-
 
     if payload.get("type") != "refresh":
         return jsonify({"error": "Invalid token type"}), 401
@@ -239,6 +249,7 @@ def logout_all_sessions():
     db.session.commit()
 
     return "", 204
+
 
 @auth_bp.route("/register", methods=["POST"])
 def register():
