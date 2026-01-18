@@ -77,7 +77,7 @@ def create_user_account(
         user_type=user_type,
         role_id=role.id,
         account_status="PENDING_ONBOARDING",
-        is_active=True,
+        is_active=False,
     )
 
     db.session.add(user)

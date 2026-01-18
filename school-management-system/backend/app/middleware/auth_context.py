@@ -33,7 +33,7 @@ def load_user_context():
 
     user = (
         db.session.query(UserAccount)
-        .filter_by(id=user_id, is_active=True)
+        .filter_by(id=user_id)
         .first()
     )
 

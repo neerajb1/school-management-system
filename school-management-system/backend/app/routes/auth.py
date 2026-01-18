@@ -15,7 +15,7 @@ from app.core.auth_utils import (
 from app.models.refresh_token import RefreshToken
 from sqlalchemy.exc import IntegrityError
 from app.core.auth_utils import create_user_account
-
+from app.modules.users.services import admin_onboard_staff
 
 
 auth_bp = Blueprint("auth", __name__)
@@ -292,5 +292,53 @@ def register():
 
 
 
+@auth_bp.route("/onboarding/staff", methods=["POST"])
+@login_required
+def staff_onboarding():
+#     current_app.logger.error(
+#     "ONBOARD DEBUG  status=%s",
+#     g.current_account_status
+# )
+#     if g.current_account_status != "PENDING_ONBOARDING":
+#         return jsonify({
+#             "error": "Account already onboarded"
+#         }), 403
 
+    data = request.get_json(silent=True) or {}
+
+    if not data.get("first_name"):
+        return jsonify({
+            "error": "first_name is required"
+        }), 400
+
+    try:
+        staff = admin_onboard_staff(
+        admin_user_id=g.current_user_id,
+        data=data,
+    )
+
+        db.session.commit()
+
+    except ValueError as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 400
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.exception("Staff onboarding failed")
+        return jsonify({
+            "error": "Staff onboarding failed",
+            "detail": str(e),
+        }), 500
+
+    return jsonify({
+        "message": "Staff onboarded successfully",
+        "staff": {
+            "id": staff.id,
+            "emp_id": staff.emp_id,
+            "first_name": staff.first_name,
+            "last_name": staff.last_name,
+            "department_id": staff.department_id,
+        }
+    }), 201
 
