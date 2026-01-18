@@ -1,2 +1,4 @@
-from .main_routes import main  # Import the main blueprint
-from .attendance import attendance_bp  # Import the attendance blueprint
+from .main_routes import main_bp
+from .auth import auth_bp
+
+__all__ = ["main_bp", "auth_bp"]

@@ -1,19 +1,36 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
 from .config import Config
-
-db = SQLAlchemy()
-migrate = Migrate()
+from app.extensions import db, migrate   # ✅ SINGLE SOURCE OF TRUTH
+from app.middleware.auth_context import load_user_context
+from app.core.audit_events import register_audit_events
 
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
-    
+
+    # 1️⃣ Init DB
     db.init_app(app)
+
+    # 2️⃣ Import ALL models (CRITICAL)
+    with app.app_context():
+        from app.models import base, users, academics, finance
+
+        # 3️⃣ Register audit hooks AFTER models are loaded
+        register_audit_events()
+
+    # 4️⃣ Init migrations AFTER models
     migrate.init_app(app, db)
 
-    from .routes import main as main_blueprint
-    app.register_blueprint(main_blueprint)
+    # 5️⃣ Register blueprints
+    from app.routes.main_routes import main_bp
+    from app.routes.auth import auth_bp
+
+    app.register_blueprint(main_bp)
+    app.register_blueprint(auth_bp, url_prefix="/auth")
+
+    # 6️⃣ Load user context before every request
+    @app.before_request
+    def before_request():
+        load_user_context()
 
     return app

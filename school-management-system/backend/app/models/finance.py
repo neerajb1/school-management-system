@@ -1,104 +1,99 @@
-from app.models.base import db, BaseModel, TimestampMixin, FeeFrequencyEnum, PaymentMethodEnum
+from sqlalchemy import (
+    Column,
+    String,
+    Date,
+    DateTime,
+    Numeric,
+    Boolean,
+    BigInteger,
+    ForeignKey,
+    Enum as SQLEnum,
+)
+from sqlalchemy.orm import relationship
 
-class FeeType(BaseModel, TimestampMixin):
+from app.models.base import (
+    BaseModel,
+    AuditMixin,
+    TimestampMixin,
+    FeeFrequencyEnum,
+    PaymentMethodEnum,
+)
+
+
+class FeeType(BaseModel, AuditMixin,TimestampMixin):
     __tablename__ = "fee_type"
-    name = db.Column(db.String(50), nullable=False)
-    frequency = db.Column(db.Enum(FeeFrequencyEnum), nullable=False)
-    fee_masters = db.relationship("FeeMaster", back_populates="fee_type")
 
-class FeeMaster(BaseModel, TimestampMixin):
+    name = Column(String(50), nullable=False)
+    frequency = Column(SQLEnum(FeeFrequencyEnum), nullable=False)
+
+    fee_masters = relationship("FeeMaster", back_populates="fee_type")
+
+
+class FeeMaster(BaseModel, AuditMixin,TimestampMixin):
     __tablename__ = "fee_master"
 
-    id = db.Column(db.String, primary_key=True)
+    class_id = Column(BigInteger, ForeignKey("class_room.id"), nullable=False)
+    session_id = Column(BigInteger, ForeignKey("academic_session.id"), nullable=False)
+    fee_type_id = Column(BigInteger, ForeignKey("fee_type.id"), nullable=False)
 
-    class_id = db.Column(
-        db.ForeignKey("class_room.id"),
-        nullable=False,
-        index=True
-    )
+    amount = Column(Numeric(10, 2), nullable=False)
+    due_date = Column(Date)
 
-    session_id = db.Column(
-        db.ForeignKey("academic_session.id"),
-        nullable=False,
-        index=True
-    )
+    fee_type = relationship("FeeType", back_populates="fee_masters")
+    session = relationship("AcademicSession", back_populates="fee_masters")
+    class_room = relationship("ClassRoom", back_populates="fee_masters")
 
-    fee_type_id = db.Column(
-        db.ForeignKey("fee_type.id"),
-        nullable=False,
-        index=True
-    )
-
-    class_room = db.relationship("ClassRoom")
-    session = db.relationship("AcademicSession")
-    fee_type = db.relationship("FeeType")
-
-
-class DiscountOffer(BaseModel, TimestampMixin):
-    """
-    Stores various offers: 'SIBLING', 'SCHOLARSHIP', 'STAFF_CHILD', or 'EARLY_BIRD'.
-    """
+class DiscountOffer(BaseModel, AuditMixin,TimestampMixin):
     __tablename__ = "discount_offer"
-    name = db.Column(db.String(50), nullable=False) # e.g., "Sibling Discount"
-    code = db.Column(db.String(20), unique=True)
-    discount_percent = db.Column(db.Numeric(5, 2), default=0.00)
-    flat_discount = db.Column(db.Numeric(10, 2), default=0.00)
-    is_active = db.Column(db.Boolean, default=True)
+
+    name = Column(String(100), nullable=False)
+    discount_percentage = Column(Numeric(5, 2))
+    discount_amount = Column(Numeric(10, 2))
+    valid_from = Column(Date)
+    valid_to = Column(Date)
+    is_active = Column(Boolean, default=True)
+
+    ledgers = relationship("StudentLedger", back_populates="discount_offer")
 
 
-class StudentLedger(BaseModel, TimestampMixin):
+class StudentLedger(BaseModel, AuditMixin,TimestampMixin):
     __tablename__ = "student_ledger"
-    enrollment_id = db.Column(db.BigInteger, db.ForeignKey("enrollment.id"), nullable=False)
-    fee_master_id = db.Column(db.BigInteger, db.ForeignKey("fee_master.id"), nullable=False)
-    offer_id = db.Column(db.BigInteger, db.ForeignKey("discount_offer.id"), nullable=True)
-    total_base_amount = db.Column(db.Numeric(10, 2), nullable=False)
-    discount_amount = db.Column(db.Numeric(10, 2))
-    final_payable_amount = db.Column(db.Numeric(10, 2), nullable=False) # After discount
-    # Status: 'PENDING', 'PARTIAL', 'PAID', 'OVERDUE'
-    status = db.Column(db.String(20), default="PENDING")
 
-    enrollment = db.relationship("Enrollment", back_populates="ledgers")
-    fee_master = db.relationship("FeeMaster", back_populates="ledgers")
-    installments = db.relationship("FeeInstallment", back_populates="ledger", cascade="all, delete-orphan")
+    enrollment_id = Column(BigInteger, ForeignKey("enrollment.id"), nullable=False)
+    fee_master_id = Column(BigInteger, ForeignKey("fee_master.id"), nullable=False)
+    discount_offer_id = Column(BigInteger, ForeignKey("discount_offer.id"))
 
-class FeeInstallment(BaseModel, TimestampMixin):
+    original_amount = Column(Numeric(10, 2), nullable=False)
+    discount_amount = Column(Numeric(10, 2))
+    final_amount = Column(Numeric(10, 2), nullable=False)
+    is_paid = Column(Boolean, default=False)
+
+    enrollment = relationship("Enrollment", back_populates="ledgers")
+    fee_master = relationship("FeeMaster")
+    discount_offer = relationship("DiscountOffer", back_populates="ledgers")
+    installments = relationship("FeeInstallment", back_populates="ledger")
+
+
+class FeeInstallment(BaseModel, AuditMixin,TimestampMixin):
     __tablename__ = "fee_installment"
 
-    id = db.Column(db.String, primary_key=True)
+    ledger_id = Column(BigInteger, ForeignKey("student_ledger.id"), nullable=False)
+    installment_no = Column(BigInteger, nullable=False)
+    amount = Column(Numeric(10, 2), nullable=False)
+    due_date = Column(Date)
+    is_paid = Column(Boolean, default=False)
 
-    fee_master_id = db.Column(
-        db.ForeignKey("fee_master.id"),
-        nullable=False,
-        index=True
-    )
+    ledger = relationship("StudentLedger", back_populates="installments")
+    transactions = relationship("Transaction", back_populates="installment")
 
-    student_id = db.Column(
-        db.ForeignKey("student.id"),
-        nullable=False,
-        index=True
-    )
 
-    due_date = db.Column(db.Date, nullable=False)
-    amount = db.Column(db.Float, nullable=False)
-
-    status = db.Column(
-        db.Enum("DUE", "PAID", "OVERDUE", name="fee_status_enum"),
-        nullable=False,
-        default="DUE"
-    )
-
-    student = db.relationship("Student", backref="fee_installments")
-    fee_master = db.relationship("FeeMaster", backref="installments")
-
-    
-class Transaction(BaseModel, TimestampMixin):
+class Transaction(BaseModel, AuditMixin,TimestampMixin):
     __tablename__ = "transaction"
-    # Now link transaction directly to an installment
-    installment_id = db.Column(db.BigInteger, db.ForeignKey("fee_installment.id"), nullable=False)
-    amount_paid = db.Column(db.Numeric(10, 2), nullable=False)
-    payment_method = db.Column(db.Enum(PaymentMethodEnum), nullable=False)
-    transaction_ref = db.Column(db.String(100)) # UPI ID, Bank Ref No, or Receipt No
-    
-    installment = db.relationship("FeeInstallment", back_populates="transactions")
 
+    installment_id = Column(BigInteger, ForeignKey("fee_installment.id"), nullable=False)
+    payment_date = Column(DateTime)
+    amount_paid = Column(Numeric(10, 2), nullable=False)
+    payment_method = Column(SQLEnum(PaymentMethodEnum), nullable=False)
+    reference_no = Column(String(100))
 
+    installment = relationship("FeeInstallment", back_populates="transactions")

@@ -1,55 +1,105 @@
 from datetime import datetime
-from flask_sqlalchemy import SQLAlchemy
-import enum
+from enum import Enum
+from sqlalchemy import (
+    Column,
+    Integer,
+    ForeignKey,
+    BigInteger,
+    DateTime,
+    String,
+    Text,
+    Enum as SQLEnum,
+)
+from sqlalchemy.orm import DeclarativeBase
 
-db = SQLAlchemy()
 
-# Enums
-class GenderEnum(enum.Enum):
-    MALE = "MALE"
-    FEMALE = "FEMALE"
-    OTHER = "OTHER"
+# =======================
+# BASE
+# =======================
 
-class AttendanceStatusEnum(enum.Enum):
-    PRESENT = "PRESENT"
-    ABSENT = "ABSENT"
+class Base(DeclarativeBase):
+    pass
 
-class AttendanceTypeEnum(enum.Enum):
-    FULL_DAY = "FULL_DAY"
-    HALF_DAY = "HALF_DAY"
-    LATE = "LATE"
-    LEAVE = "LEAVE"
 
-class FeeFrequencyEnum(enum.Enum):
-    MONTHLY = "MONTHLY"
-    QUARTERLY = "QUARTERLY"
-    YEARLY = "YEARLY"
-    ONETIME = "ONETIME"
+# =======================
+# ENUMS (ALL OF THEM)
+# =======================
 
-class PaymentMethodEnum(enum.Enum):
-    CASH = "CASH"
-    CARD = "CARD"
-    UPI = "UPI"
-    BANK_TRANSFER = "BANK_TRANSFER"
+class GenderEnum(Enum):
+    MALE = "male"
+    FEMALE = "female"
+    OTHER = "other"
 
-# Base Mixins
+
+class TransportTypeEnum(Enum):
+    BUS = "bus"
+    VAN = "van"
+    WALKING = "walking"
+
+
+class BloodGroupEnum(Enum):
+    A_POS = "A+"
+    A_NEG = "A-"
+    B_POS = "B+"
+    B_NEG = "B-"
+    O_POS = "O+"
+    O_NEG = "O-"
+    AB_POS = "AB+"
+    AB_NEG = "AB-"
+
+
+class FeeFrequencyEnum(Enum):
+    MONTHLY = "monthly"
+    QUARTERLY = "quarterly"
+    YEARLY = "yearly"
+
+
+class PaymentMethodEnum(Enum):
+    CASH = "cash"
+    CARD = "card"
+    UPI = "upi"
+    BANK_TRANSFER = "bank_transfer"
+
+
+# =======================
+# MIXINS
+# =======================
+
 class TimestampMixin:
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    created_by = db.Column(db.BigInteger)
-    modified_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
-    modified_by = db.Column(db.BigInteger)
-    is_deleted = db.Column(db.Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow
+    )
+
+class AuditMixin:
+    created_by_id = Column(
+        BigInteger,
+        ForeignKey("user_account.id"),
+        nullable=True
+    )
+    updated_by_id = Column(
+        BigInteger,
+        ForeignKey("user_account.id"),
+        nullable=True
+    )
+
 
 class TransportMixin:
-    transport_type = db.Column(db.String(50)) # School Bus, Private, Walk
-    bus_route = db.Column(db.String(50))
-    pickup_point = db.Column(db.String(100))
+    transport_type = Column(SQLEnum(TransportTypeEnum), nullable=True)
+    transport_route = Column(String(100), nullable=True)
+
 
 class MedicalMixin:
-    blood_group = db.Column(db.String(5))
-    medical_conditions = db.Column(db.Text)
-    allergies = db.Column(db.Text)
+    blood_group = Column(SQLEnum(BloodGroupEnum), nullable=True)
+    medical_notes = Column(Text, nullable=True)
 
-class BaseModel(db.Model):
+
+# =======================
+# BASE MODEL
+# =======================
+
+class BaseModel(Base):
     __abstract__ = True
-    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True)

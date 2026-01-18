@@ -1,73 +1,108 @@
-from app.models.base import db, BaseModel, TimestampMixin, GenderEnum, TransportMixin, MedicalMixin
+from sqlalchemy import (
+    Column,
+    String,
+    Date,
+    DateTime,
+    Text,
+    Boolean,
+    BigInteger,
+    ForeignKey,
+    Enum as SQLEnum,
+)
+from sqlalchemy.orm import relationship
 
-class Role(BaseModel, TimestampMixin):
+from app.models.base import (
+    BaseModel,
+    AuditMixin,
+    TimestampMixin,
+    GenderEnum,
+    TransportMixin,
+    MedicalMixin,
+)
+
+
+class Role(BaseModel, TimestampMixin, AuditMixin):
     __tablename__ = "role"
-    name = db.Column(db.String(50), unique=True, nullable=False)
 
-    #staff = db.relationship("Staff", back_populates="role")
-    users = db.relationship("UserAccount", back_populates="role")
+    name = Column(String(50), unique=True, nullable=False)
+    # Staff with this role
+    staff = relationship(
+        "Staff",
+        back_populates="role",
+        foreign_keys="Staff.role_id"
+    )
 
-class Department(BaseModel, TimestampMixin):
+    users = relationship(
+        "UserAccount",
+        back_populates="role",
+        foreign_keys="UserAccount.role_id"
+    )
+
+
+class Department(BaseModel, AuditMixin,TimestampMixin):
     __tablename__ = "department"
-    name = db.Column(db.String(50), unique=True, nullable=False)
 
-    staff = db.relationship("Staff", back_populates="department")
+    name = Column(String(50), unique=True, nullable=False)
 
-class Staff(BaseModel, TimestampMixin):
+    staff = relationship("Staff", back_populates="department")
+
+
+class Staff(BaseModel, AuditMixin,TimestampMixin):
     __tablename__ = "staff"
-    emp_id = db.Column(db.String(30), unique=True, nullable=False)
-    first_name = db.Column(db.String(50), nullable=False)
-    last_name = db.Column(db.String(50))
-    email = db.Column(db.String(100))
-    phone = db.Column(db.String(20))
-    photo_url = db.Column(db.String(255))
-    joining_date = db.Column(db.Date)
-    qualification = db.Column(db.String(100))
-    role_id = db.Column(db.BigInteger, db.ForeignKey("role.id"))
-    department_id = db.Column(db.BigInteger, db.ForeignKey("department.id"))
 
-    role = db.relationship("Role", back_populates="staff")
-    department = db.relationship("Department", back_populates="staff")
-    transport = db.relationship("Transport", back_populates="staff", uselist=False)
-    medical = db.relationship("MedicalRecord", back_populates="staff", uselist=False)
-    teacher_assignments = db.relationship("TeacherAssignment", back_populates="staff")
+    emp_id = Column(String(30), unique=True, nullable=False)
+    first_name = Column(String(50), nullable=False)
+    last_name = Column(String(50))
+    email = Column(String(100))
+    phone = Column(String(20))
+    photo_url = Column(String(255))
+    joining_date = Column(Date)
+    qualification = Column(String(100))
 
-class Guardian(BaseModel, TimestampMixin):
-    """Handles Parent/Guardian info for one or more siblings"""
+    role_id = Column(BigInteger, ForeignKey("role.id"))
+    department_id = Column(BigInteger, ForeignKey("department.id"))
+
+    role = relationship("Role", back_populates="staff")
+    department = relationship("Department", back_populates="staff")
+    transport = relationship("Transport", back_populates="staff", uselist=False)
+    medical = relationship("MedicalRecord", back_populates="staff", uselist=False)
+    teacher_assignments = relationship("TeacherAssignment", back_populates="staff")
+
+
+class Guardian(BaseModel, AuditMixin,TimestampMixin):
     __tablename__ = "guardian"
-    father_name = db.Column(db.String(100))
-    father_occupation = db.Column(db.String(100))
-    mother_name = db.Column(db.String(100))
-    parent_email = db.Column(db.String(100))
-    emergency_contact = db.Column(db.String(20), nullable=False)
-    
-    # Relationship: One guardian can have multiple students (siblings)
-    students = db.relationship("Student", back_populates="guardian")
 
-class Student(BaseModel, TimestampMixin):
+    father_name = Column(String(100))
+    father_occupation = Column(String(100))
+    mother_name = Column(String(100))
+    parent_email = Column(String(100))
+    emergency_contact = Column(String(20), nullable=False)
+
+    students = relationship("Student", back_populates="guardian")
+
+
+class Student(BaseModel, AuditMixin,TimestampMixin):
     __tablename__ = "student"
-    admission_no = db.Column(db.String(30), unique=True, nullable=False)
-    first_name = db.Column(db.String(50), nullable=False)
-    last_name = db.Column(db.String(50))
-    dob = db.Column(db.Date)
-    gender = db.Column(db.Enum(GenderEnum), nullable=False)
-    nationality = db.Column(db.String(50))
-    email = db.Column(db.String(100))
-    phone = db.Column(db.String(20))
-    photo_url = db.Column(db.String(255))
-    admission_date = db.Column(db.Date)
 
-    # Foreign Keys to specialized tables
-    guardian_id = db.Column(db.BigInteger, db.ForeignKey("guardian.id"))
+    admission_no = Column(String(30), unique=True, nullable=False)
+    first_name = Column(String(50), nullable=False)
+    last_name = Column(String(50))
+    dob = Column(Date)
+    gender = Column(SQLEnum(GenderEnum), nullable=False)
+    nationality = Column(String(50))
+    email = Column(String(100))
+    phone = Column(String(20))
+    photo_url = Column(String(255))
+    admission_date = Column(Date)
 
-    # Relationships
-    guardian = db.relationship("Guardian", back_populates="students")
-    transport = db.relationship("Transport", back_populates="student", uselist=False)
-    medical = db.relationship("MedicalRecord", back_populates="student", uselist=False)
-    enrollments = db.relationship("Enrollment", back_populates="student")
+    guardian_id = Column(BigInteger, ForeignKey("guardian.id"))
+
+    guardian = relationship("Guardian", back_populates="students")
+    transport = relationship("Transport", back_populates="student", uselist=False)
+    medical = relationship("MedicalRecord", back_populates="student", uselist=False)
+    enrollments = relationship("Enrollment", back_populates="student")
 
     def to_dict(self):
-        """Convert the Student object to a dictionary."""
         return {
             "id": self.id,
             "admission_no": self.admission_no,
@@ -83,51 +118,67 @@ class Student(BaseModel, TimestampMixin):
             "guardian_id": self.guardian_id,
         }
 
-class Transport(BaseModel, TimestampMixin, TransportMixin):
+
+class Transport(BaseModel, AuditMixin,TimestampMixin, TransportMixin):
     __tablename__ = "transport_registry"
-    student_id = db.Column(db.BigInteger, db.ForeignKey("student.id"), nullable=True, unique=True)
-    staff_id = db.Column(db.BigInteger, db.ForeignKey("staff.id"), nullable=True, unique=True)
 
-    student = db.relationship("Student", back_populates="transport")
-    staff = db.relationship("Staff", back_populates="transport")
+    student_id = Column(BigInteger, ForeignKey("student.id"), unique=True)
+    staff_id = Column(BigInteger, ForeignKey("staff.id"), unique=True)
 
-class MedicalRecord(BaseModel, TimestampMixin, MedicalMixin):
+    student = relationship("Student", back_populates="transport")
+    staff = relationship("Staff", back_populates="transport")
+
+
+class MedicalRecord(BaseModel, AuditMixin,TimestampMixin, MedicalMixin):
     __tablename__ = "medical_registry"
-    student_id = db.Column(db.BigInteger, db.ForeignKey("student.id"), nullable=True, unique=True)
-    staff_id = db.Column(db.BigInteger, db.ForeignKey("staff.id"), nullable=True, unique=True)
 
-    student = db.relationship("Student", back_populates="medical")
-    staff = db.relationship("Staff", back_populates="medical")
+    student_id = Column(BigInteger, ForeignKey("student.id"), unique=True)
+    staff_id = Column(BigInteger, ForeignKey("staff.id"), unique=True)
 
-class School(BaseModel, TimestampMixin):
+    student = relationship("Student", back_populates="medical")
+    staff = relationship("Staff", back_populates="medical")
+
+
+class School(BaseModel, AuditMixin,TimestampMixin):
     __tablename__ = "school"
-    name = db.Column(db.String(100), nullable=False)
-    address = db.Column(db.Text)
-    contact_number = db.Column(db.String(20))
-    registration_no = db.Column(db.String(50)) # Government ID
-    logo_url = db.Column(db.String(255))
+
+    name = Column(String(100), nullable=False)
+    address = Column(Text)
+    contact_number = Column(String(20))
+    registration_no = Column(String(50))
+    logo_url = Column(String(255))
 
 
-class UserAccount(BaseModel, TimestampMixin):
+class UserAccount(BaseModel, TimestampMixin, AuditMixin):
     __tablename__ = "user_account"
-    email = db.Column(db.String(100), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
-    role_id = db.Column(db.BigInteger, db.ForeignKey("role.id"))
-    
-    # Polymorphic linking
-    user_type = db.Column(db.String(20)) # (ADMIN / TEACHER / STUDENT / PARENT, ACCOUNTANT)
-    is_active = db.Column(db.Boolean, default=True)
-    last_login = db.Column(db.DateTime)
-    role_id = db.Column(db.ForeignKey("role.id"), nullable=False)
-    role = db.relationship("Role", back_populates="users")
-    #role = db.relationship("Role", back_populates="accounts")
 
-class Announcement(BaseModel, TimestampMixin):
+    email = Column(String(100), unique=True, nullable=False)
+    password_hash = Column(String(255), nullable=False)
+
+    role_id = Column(
+        BigInteger,
+        ForeignKey("role.id"),
+        nullable=False
+    )
+
+    user_type = Column(String(20))  # ADMIN / TEACHER / STUDENT / PARENT
+    is_active = Column(Boolean, default=True)
+    last_login = Column(DateTime)
+
+    role = relationship(
+        "Role",
+        back_populates="users",
+        foreign_keys=[role_id]
+    )
+
+
+
+class Announcement(BaseModel, AuditMixin,TimestampMixin):
     __tablename__ = "announcement"
-    title = db.Column(db.String(200), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    target_audience = db.Column(db.String(20)) # 'ALL', 'TEACHERS', 'PARENTS'
-    expiry_date = db.Column(db.Date)
-    
-    # Link to a specific session if needed
-    session_id = db.Column(db.BigInteger, db.ForeignKey("academic_session.id"))
+
+    title = Column(String(200), nullable=False)
+    content = Column(Text, nullable=False)
+    target_audience = Column(String(20))
+    expiry_date = Column(Date)
+
+    session_id = Column(BigInteger, ForeignKey("academic_session.id"))

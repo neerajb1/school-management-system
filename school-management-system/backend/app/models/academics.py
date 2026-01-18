@@ -1,163 +1,123 @@
-from app.models.base import db, BaseModel, TimestampMixin, AttendanceStatusEnum, AttendanceTypeEnum
+from sqlalchemy import (
+    Column,
+    String,
+    Date,
+    Numeric,
+    Boolean,
+    BigInteger,
+    ForeignKey,
+)
+from sqlalchemy.orm import relationship
 
-class AcademicSession(BaseModel, TimestampMixin):
+from app.models.base import BaseModel, AuditMixin, TimestampMixin
+
+
+class AcademicSession(BaseModel, AuditMixin,TimestampMixin):
     __tablename__ = "academic_session"
-    year_label = db.Column(db.String(20), unique=True, nullable=False)
-    is_current = db.Column(db.Boolean, default=False)
 
-    enrollments = db.relationship("Enrollment", back_populates="session")
-    exams = db.relationship("Exam", back_populates="session")
-    teacher_assignments = db.relationship("TeacherAssignment", back_populates="session")
-    fee_masters = db.relationship("FeeMaster", back_populates="session")
+    name = Column(String(50), nullable=False)
+    start_date = Column(Date)
+    end_date = Column(Date)
+    is_active = Column(Boolean, default=True)
 
-class Subject(BaseModel, TimestampMixin):
+    enrollments = relationship("Enrollment", back_populates="session")
+    exams = relationship("Exam", back_populates="session")
+    teacher_assignments = relationship("TeacherAssignment", back_populates="session")
+    fee_masters = relationship("FeeMaster", back_populates="session")
+
+
+class Subject(BaseModel, AuditMixin,TimestampMixin):
     __tablename__ = "subject"
-    name = db.Column(db.String(50), nullable=False)
-    code = db.Column(db.String(20), unique=True, nullable=False)
 
-    marksheets = db.relationship("Marksheet", back_populates="subject")
-    teacher_assignments = db.relationship("TeacherAssignment", back_populates="subject")
+    name = Column(String(50), nullable=False)
+    code = Column(String(20), unique=True, nullable=False)
 
-class ClassRoom(BaseModel, TimestampMixin):
-    __tablename__ = "class"
-    grade = db.Column(db.String(20), nullable=False)
-    section = db.Column(db.String(5), nullable=False)
-    stream = db.Column(db.String(20), default="General")
+    marksheets = relationship("Marksheet", back_populates="subject")
+    teacher_assignments = relationship("TeacherAssignment", back_populates="subject")
 
-    enrollments = db.relationship("Enrollment", back_populates="class_room")
-    teacher_assignments = db.relationship("TeacherAssignment", back_populates="class_room")
 
-class Enrollment(BaseModel, TimestampMixin):
+class ClassRoom(BaseModel, AuditMixin,TimestampMixin):
+    __tablename__ = "class_room"
+
+    name = Column(String(50), nullable=False)
+    section = Column(String(10))
+
+    enrollments = relationship("Enrollment", back_populates="class_room")
+    teacher_assignments = relationship("TeacherAssignment", back_populates="class_room")
+    fee_masters = relationship("FeeMaster", back_populates="class_room")
+
+
+class Enrollment(BaseModel, AuditMixin,TimestampMixin):
     __tablename__ = "enrollment"
-    student_id = db.Column(db.BigInteger, db.ForeignKey("student.id"), nullable=False)
-    session_id = db.Column(db.BigInteger, db.ForeignKey("academic_session.id"), nullable=False)
-    class_id = db.Column(db.BigInteger, db.ForeignKey("class.id"), nullable=False)
-    roll_no = db.Column(db.Integer)
-    status = db.Column(db.String(20))
 
-    # Define the relationship with the Student model
-    student = db.relationship("Student", back_populates="enrollments")  # Ensure this relationship exists
+    student_id = Column(BigInteger, ForeignKey("student.id"), nullable=False)
+    class_id = Column(BigInteger, ForeignKey("class_room.id"), nullable=False)
+    session_id = Column(BigInteger, ForeignKey("academic_session.id"), nullable=False)
+    roll_no = Column(String(20))
 
-    session = db.relationship("AcademicSession", back_populates="enrollments")
-    class_room = db.relationship("ClassRoom", back_populates="enrollments")
-    attendance_records = db.relationship("Attendance", back_populates="enrollment")
-    marksheets = db.relationship("Marksheet", back_populates="enrollment")
-    ledgers = db.relationship("StudentLedger", back_populates="enrollment")
+    student = relationship("Student", back_populates="enrollments")
+    class_room = relationship("ClassRoom", back_populates="enrollments")
+    session = relationship("AcademicSession", back_populates="enrollments")
+    attendance_records = relationship("Attendance", back_populates="enrollment")
+    marksheets = relationship("Marksheet", back_populates="enrollment")
+    ledgers = relationship("StudentLedger", back_populates="enrollment")
 
-class Attendance(BaseModel, TimestampMixin):
+
+class Attendance(BaseModel, AuditMixin,TimestampMixin):
     __tablename__ = "attendance"
 
-    id = db.Column(db.String, primary_key=True)
+    enrollment_id = Column(BigInteger, ForeignKey("enrollment.id"), nullable=False)
+    date = Column(Date, nullable=False)
+    is_present = Column(Boolean, default=True)
 
-    enrollment_id = db.Column(
-        db.ForeignKey("enrollment.id"),
-        nullable=False,
-        index=True
-    )
-
-    # 🔥 denormalized for fast queries
-    class_id = db.Column(
-        db.ForeignKey("class_room.id"),
-        nullable=False,
-        index=True
-    )
-
-    section_id = db.Column(
-        db.ForeignKey("section.id"),
-        nullable=False,
-        index=True
-    )
-
-    date = db.Column(db.Date, nullable=False)
-
-    status = db.Column(
-        db.Enum("PRESENT", "ABSENT", "LATE", name="attendance_status_enum"),
-        nullable=False
-    )
-
-    enrollment = db.relationship("Enrollment")
-    class_room = db.relationship("ClassRoom")
-    section = db.relationship("Section")
-
-    __table_args__ = (
-        db.UniqueConstraint(
-            "enrollment_id",
-            "date",
-            name="uq_attendance_enrollment_date"
-        ),
-    )
+    enrollment = relationship("Enrollment", back_populates="attendance_records")
 
 
-
-class Exam(BaseModel, TimestampMixin):
+class Exam(BaseModel, AuditMixin,TimestampMixin):
     __tablename__ = "exam"
-    session_id = db.Column(db.BigInteger, db.ForeignKey("academic_session.id"), nullable=False)
-    name = db.Column(db.String(50), nullable=False)
-    term = db.Column(db.String(20))
-    exam_type = db.Column(db.String(20))
-    description = db.Column(db.Text)
-    #start_date = db.Column(db.Date, nullable=False)  # Added start_date column
-    #end_date = db.Column(db.Date, nullable=False)    # Added end_date column
 
-    session = db.relationship("AcademicSession", back_populates="exams")
-    marksheets = db.relationship("Marksheet", back_populates="exam")
+    name = Column(String(50), nullable=False)
+    session_id = Column(BigInteger, ForeignKey("academic_session.id"), nullable=False)
 
-class Marksheet(BaseModel, TimestampMixin):
+    session = relationship("AcademicSession", back_populates="exams")
+    marksheets = relationship("Marksheet", back_populates="exam")
+
+
+class Marksheet(BaseModel, AuditMixin,TimestampMixin):
     __tablename__ = "marksheet"
 
-    id = db.Column(db.String, primary_key=True)
+    enrollment_id = Column(BigInteger, ForeignKey("enrollment.id"), nullable=False)
+    subject_id = Column(BigInteger, ForeignKey("subject.id"), nullable=False)
+    exam_id = Column(BigInteger, ForeignKey("exam.id"), nullable=False)
 
-    enrollment_id = db.Column(
-        db.ForeignKey("enrollment.id"),
-        nullable=False,
-        index=True
-    )
+    marks_obtained = Column(Numeric(5, 2))
+    max_marks = Column(Numeric(5, 2))
+    grade = Column(String(10))
 
-    exam_id = db.Column(
-        db.ForeignKey("exam.id"),
-        nullable=False,
-        index=True
-    )
-
-    subject_id = db.Column(
-        db.ForeignKey("subject.id"),
-        nullable=False,
-        index=True
-    )
-
-    marks = db.Column(db.Float, nullable=False)
-
-    enrollment = db.relationship("Enrollment")
-    exam = db.relationship("Exam")
-    subject = db.relationship("Subject")
-
-    __table_args__ = (
-        db.UniqueConstraint(
-            "enrollment_id",
-            "exam_id",
-            "subject_id",
-            name="uq_marksheet_enrollment_exam_subject"
-        ),
-    )
+    enrollment = relationship("Enrollment", back_populates="marksheets")
+    subject = relationship("Subject", back_populates="marksheets")
+    exam = relationship("Exam", back_populates="marksheets")
 
 
-class TeacherAssignment(BaseModel, TimestampMixin):
+class TeacherAssignment(BaseModel, AuditMixin,TimestampMixin):
     __tablename__ = "teacher_assignment"
-    staff_id = db.Column(db.BigInteger, db.ForeignKey("staff.id"), nullable=False)
-    class_id = db.Column(db.BigInteger, db.ForeignKey("class.id"), nullable=False)
-    subject_id = db.Column(db.BigInteger, db.ForeignKey("subject.id"), nullable=False)
-    session_id = db.Column(db.BigInteger, db.ForeignKey("academic_session.id"), nullable=False)
 
-    staff = db.relationship("Staff", back_populates="teacher_assignments")
-    subject = db.relationship("Subject", back_populates="teacher_assignments")
-    session = db.relationship("AcademicSession", back_populates="teacher_assignments")
-    class_room = db.relationship("ClassRoom", back_populates="teacher_assignments")
+    staff_id = Column(BigInteger, ForeignKey("staff.id"), nullable=False)
+    subject_id = Column(BigInteger, ForeignKey("subject.id"), nullable=False)
+    class_id = Column(BigInteger, ForeignKey("class_room.id"), nullable=False)
+    session_id = Column(BigInteger, ForeignKey("academic_session.id"), nullable=False)
+
+    staff = relationship("Staff", back_populates="teacher_assignments")
+    subject = relationship("Subject", back_populates="teacher_assignments")
+    class_room = relationship("ClassRoom", back_populates="teacher_assignments")
+    session = relationship("AcademicSession", back_populates="teacher_assignments")
 
 
-class GradeScale(BaseModel, TimestampMixin):
+class GradeScale(BaseModel, AuditMixin,TimestampMixin):
     __tablename__ = "grade_scale"
-    grade_name = db.Column(db.String(10), nullable=False) # e.g., "A+"
-    min_percentage = db.Column(db.Numeric(5, 2), nullable=False) # 90.00
-    max_percentage = db.Column(db.Numeric(5, 2), nullable=False) # 100.00
-    grade_point = db.Column(db.Numeric(3, 1)) # 4.0 or 10.0
-    remarks = db.Column(db.String(100))
+
+    grade_name = Column(String(10), nullable=False)
+    min_percentage = Column(Numeric(5, 2), nullable=False)
+    max_percentage = Column(Numeric(5, 2), nullable=False)
+    grade_point = Column(Numeric(3, 1))
+    remarks = Column(String(100))
